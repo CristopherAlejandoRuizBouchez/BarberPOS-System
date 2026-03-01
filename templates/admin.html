@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Administración - Barbería</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; text-align: center; }
+        nav { background: #333; padding: 12px; border-radius: 8px; margin-bottom: 25px; }
+        nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; text-align: left; }
+        h1 { color: #333; margin-bottom: 30px; }
+        h3 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        button { font-weight: bold; cursor: pointer; border: none; transition: 0.3s; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background-color: #fafafa; color: #666; font-size: 0.9em; text-transform: uppercase; }
+        .btn-quitar { color: #dc3545; text-decoration: none; font-weight: bold; }
+        .card-barberos { border-top: 6px solid #ffc107; }
+        .btn-barberos { background-color: #ffc107; color: black; }
+        .card-gastos { border-top: 6px solid #dc3545; }
+        .btn-gastos { background-color: #dc3545; color: white; }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="/">🏠 Panel de Ventas</a>
+        <a href="/reportes">📊 Ver Reportes Mensuales</a>
+        <a href="/admin">⚙️ Configuración (Dueño)</a>
+        
+        <a href="/apagar" style="background-color: #dc3545; color: white; float: right; border-radius: 5px; padding: 5px 15px;" onclick="return confirm('¿Estás seguro de que deseas apagar el sistema y cerrar tu turno?');">
+            🔴 Apagar Sistema
+        </a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div style="padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; 
+                        background-color: {% if category=='error' %}#ffcccc{% else %}#d4edda{% endif %}; 
+                        color: {% if category=='error' %}#cc0000{% else %}#155724{% endif %}; border: 1px solid currentColor;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <h1>⚙️ Administración del Negocio</h1>
+
+        <div class="card card-barberos">
+            <h3>👤 Registrar Nuevo Barbero</h3>
+            <form action="/agregar_barbero" method="POST">
+                <input type="text" name="nombre" placeholder="Nombre del Barbero (ej. Richy)" required>
+                <input type="number" name="comision" placeholder="% Comisión (ej. 50)" required>
+                <button type="submit" class="btn-barberos">Dar de Alta</button>
+            </form>
+            <h4 style="margin-top: 25px;">Barberos Activos:</h4>
+            <table>
+                <thead><tr><th>Nombre</th><th>Comisión</th><th>Acción</th></tr></thead>
+                <tbody>
+                    {% for b in barberos %}
+                    <tr>
+                        <td style="font-weight: bold;">{{ b[1] }}</td>
+                        <td>
+                            <form action="/editar_comision/{{ b[0] }}" method="POST" style="display: inline-flex; align-items: center; gap: 5px; margin: 0;">
+                                <input type="number" name="nueva_comision" value="{{ b[2] }}" style="width: 70px; padding: 6px; margin: 0; border: 1px solid #ccc; border-radius: 4px;" required min="0" max="100">
+                                <span style="font-weight: bold; color: #555;">%</span>
+                                <button type="submit" style="background: #28a745; color: white; padding: 6px 10px; border-radius: 4px; font-size: 0.85em; border: none; cursor: pointer;">
+                                    Actualizar
+                                </button>
+                            </form>
+                        </td>
+                        <td><a href="/eliminar_barbero/{{ b[0] }}" class="btn-quitar" onclick="return confirm('¿Quitar barbero?')">❌ Quitar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card card-gastos">
+            <h3>💸 Registrar Egreso</h3>
+            <form action="/agregar_egreso" method="POST">
+                <input type="text" name="descripcion" placeholder="Concepto (ej. Luz)" required>
+                <input type="number" name="monto" placeholder="Monto $" required>
+                <select name="categoria">
+                    <option value="Renta">Renta</option><option value="Luz">Luz</option><option value="Insumos">Insumos</option><option value="Otros">Otros</option>
+                </select>
+                <button type="submit" class="btn-gastos">Guardar Gasto</button>
+            </form>
+            <h4>Historial del Mes:</h4>
+            <table>
+                <thead><tr><th>Concepto</th><th>Monto</th><th>Acción</th></tr></thead>
+                <tbody>
+                    {% for e in egresos %}
+                    <tr>
+                        <td><b>{{ e[1] }}</b> <br><small style="color:gray;">{{ e[3] }}</small></td>
+                        <td style="color: #dc3545; font-weight: bold;">${{ "{:,.2f}".format(e[2]|float) }}</td>
+                        <td><a href="/eliminar_egreso/{{ e[0] }}" style="color:red; text-decoration:none; font-weight:bold;">❌ Quitar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>📦 Catálogo de Productos</h3>
+            <form action="/agregar" method="POST">
+                <input type="text" name="nombre" placeholder="Ej: Cera Mate" required>
+                <input type="number" step="0.01" name="precio" placeholder="Precio $" required>
+                <select name="categoria"><option value="Servicio">Servicio</option><option value="Producto">Producto</option></select>
+                <input type="number" name="stock" placeholder="Cantidad inicial (Stock)" value="0" min="0">
+                <button type="submit" style="background: #007bff; color: white;">Guardar en Catálogo</button>
+            </form>
+        </div>
+
+        <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+            <thead><tr><th>Nombre</th><th>Precio</th><th>Categoría</th><th>Stock</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for item in catalogo %}
+                <tr>
+                    <td>{{ item[1] }}</td>
+                    <td>${{ "{:,.2f}".format(item[2]|float) }}</td>
+                    <td>{{ item[3] }}</td>
+                    <td style="text-align: center;">
+                        {% if item[3] == 'Producto' %}
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                                <span style="font-weight: bold; color: {% if item[4]|int < 3 %}red{% else %}black{% endif %};">{{ item[4] }} u.</span>
+                                <form action="/surtir_stock/{{ item[0] }}" method="POST" style="display: flex; gap: 2px;">
+                                    <input type="number" name="cantidad_nueva" placeholder="+" style="width: 40px; padding: 2px;" required min="1">
+                                    <button type="submit" style="background: #28a745; color: white; padding: 2px 6px;">OK</button>
+                                </form>
+                            </div>
+                        {% else %}<span style="color: #999;">—</span>{% endif %}
+                    </td>
+                    <td><a href="/eliminar_item/{{ item[0] }}" style="color: red; text-decoration: none;" onclick="return confirm('¿Eliminar?')">❌ Borrar</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

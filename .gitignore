@@ -1,0 +1,17 @@
+# Ignorar bases de datos reales
+*.db
+*.sqlite3
+
+# Ignorar ejecutables y carpetas de construcción
+/build/
+/dist/
+*.exe
+*.spec
+
+# Ignorar archivos temporales de Python
+__pycache__/
+*.pyc
+
+# Entornos virtuales
+venv/
+env/
