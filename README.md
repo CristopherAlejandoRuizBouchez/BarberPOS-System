@@ -27,5 +27,5 @@ Si deseas ejecutar este proyecto de manera local o contribuir al código:
 
 1. **Clona el repositorio:**
    ```bash
-   git clone [https://github.com/TuUsuario/BarberPOS.git](https://github.com/TuUsuario/BarberPOS.git)
+   git clone (https://github.com/CristopherAlejandoRuizBouchez/BarberPOS-System)
    cd BarberPOS
